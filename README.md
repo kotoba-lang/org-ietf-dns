@@ -113,6 +113,69 @@ different registrar-account operation that `godaddy-dns`'s `IDns` doesn't
 implement — out of scope here too; `nameserver.delegate` covers subdomain
 delegation through the generic records API.
 
+## Running for real
+
+The quick-start/`run_server.clj` path above is for trying it out. To run a
+persistent process:
+
+```
+clojure -M -m nameserver.main [config.edn]   # defaults to $NAMESERVER_CONFIG, then ./config.edn
+```
+
+`config.edn` (see `examples/config.edn`):
+
+```clojure
+{:host "0.0.0.0" :port 53                     ; 53 needs root/CAP_NET_BIND_SERVICE, see below
+ :zones-dir "/etc/org-ietf-dns/zones"          ; every *.zone file in the dir; $ORIGIN in the
+                                                ; file text is the key, filename doesn't matter
+ :custom-tld {:suffixes ["hogehoge."]          ; optional
+              :gateway-host "ipns.dweb.link"}} ; optional
+```
+
+`nameserver.main` loads every zone file, wires up `chain-resolver`
+(hosted zones first, custom-TLD alt-root as fallback if configured), boots
+`nameserver.server`, and installs a JVM shutdown hook so `SIGTERM`/`SIGINT`
+close the sockets cleanly (`systemctl stop` / `docker stop` / Ctrl-C all work).
+
+**Binding port 53 without running as root** — three options, pick one:
+1. `sudo setcap 'cap_net_bind_service=+ep' "$(readlink -f "$(which java)")"` once,
+   then run the JVM as a normal user.
+2. `AmbientCapabilities=CAP_NET_BIND_SERVICE` in the systemd unit (see
+   `deploy/org-ietf-dns.service` — grants the capability only to this
+   service, no `setcap` on the shared `java` binary).
+3. Run in Docker (`docker run -p 53:53/udp -p 53:53/tcp ...`) — the
+   container's own root can bind 53 internally regardless of host user; see
+   `Dockerfile`. *(Follows this org's established pattern of running
+   Clojure services from source via the Clojure CLI, no uberjar step —
+   same shape as `ai-gftd-syosetsuka`'s Dockerfile. Not build-verified in
+   this session — no Docker daemon available in the environment it was
+   written in; verify with `docker build .` before relying on it.)*
+
+**Getting real internet traffic to it**: NS delegation, not code — see
+"Delegating a real subdomain" above. Nothing resolves *to* this server
+until some parent zone's NS records point at its public IP.
+
+**Using the custom-TLD bridge from a real client**: `.hogehoge` isn't in
+anyone's default resolution path, so a client has to be told to ask *this*
+server for it specifically (same reality section above already covers —
+this is the client-side half of that). Two practical ways, least to most
+invasive:
+- **One-off / testing**: `dig @<this-server-ip> <name>.hogehoge TXT` directly
+  — no client config at all, just point the query at the IP.
+- **Split-horizon for a whole machine**: forward only the custom suffix to
+  this server while everything else still goes to normal DNS, instead of
+  replacing `/etc/resolv.conf` wholesale (which would break all other DNS).
+  With `systemd-resolved`:
+  ```
+  # /etc/systemd/resolved.conf.d/hogehoge.conf
+  [Resolve]
+  DNS=<this-server-ip>
+  Domains=~hogehoge
+  ```
+  (the `~` makes it a routing-only domain, not the default search domain)
+  then `systemctl restart systemd-resolved`. With `dnsmasq`:
+  `server=/hogehoge/<this-server-ip>` in `dnsmasq.conf`.
+
 ## Scope (documented, not silently missing)
 
 - ASCII labels only (IDN's punycode ASCII-safe encoding covers real-world
