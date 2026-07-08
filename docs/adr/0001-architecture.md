@@ -112,3 +112,46 @@ exact/wildcard/CNAME/NODATA/NXDOMAIN/ANY、resolver chain、custom-tld の
 dnslink/CNAME/NXDOMAIN/REFUSED、delegate の純関数、server の実ソケット UDP
 統合テスト4本)。加えて `examples/run_server.clj` を起動し実 `dig` で
 A/CNAME/NXDOMAIN/ANY/TCP フォールバック/カスタム TLD TXT・CNAME を目視確認。
+
+## 7. 実運用エントリポイント (`nameserver.main`) + systemd/Docker（2026-07-08 追記）
+
+「実際にネームサーバーとして動かすには」という問いを受け、REPL/`run_server.clj`
+の demo と実運用の間を埋める CLI エントリポイントを追加した:
+
+- **`nameserver.main`** — `clojure -M -m nameserver.main [config.edn]`。
+  config は `:host`/`:port`/`:zones-dir`(ディレクトリ内の全 `*.zone` を
+  `zone.zone/parse-str` でロード、キーは各ファイルの `$ORIGIN`)/`:custom-tld`
+  (任意)。`chain-resolver` で hosted zones → custom-tld alt-root の順に組み、
+  `nameserver.server` を起動、JVM shutdown hook で `SIGTERM`/`SIGINT` 時に
+  `stop-server!` を呼びソケットを正常終了する。この形（env-var config +
+  shutdown hook + `@(promise)` blocking）は本 org 内の既存パターン
+  （`murakumo/relay_server.clj`、`ai-gftd-syosetsuka/server.cljc`）と同型 —
+  新規に発明していない。
+- **`deploy/org-ietf-dns.service`** — systemd unit。`AmbientCapabilities=
+  CAP_NET_BIND_SERVICE` で 53 番ポートを root 無しに bind できるようにする
+  （本 org に既存の JVM 向け systemd unit 前例は無く、唯一の前例
+  `kotodama-py/.../ameno-daemon.service` は Python daemon だったため、
+  `Type=simple`/`Restart=on-failure`/journal ログといった**形**だけ流用し、
+  `ExecStart`/capability 部分は新規に書いた）。
+- **`Dockerfile`** — uberjar を作らず、この org の他サービス
+  （`ai-gftd-syosetsuka` 等）と同じ「ソースを Clojure CLI で直接動かす」形。
+  本 org 全体を調査したが `tools.build`/uberjar の前例は皆無だったため、
+  それを新規導入せずこの org の既定パターンに合わせた。**Docker build 自体は
+  未検証**（作業環境に Docker daemon が起動していなかったため）——README に
+  「未検証」と明記し、動作確認済みと偽らない。
+- README に「Running for real」節を追加: port 53 bind の3方法
+  （setcap / systemd AmbientCapabilities / Docker）、実トラフィックの
+  獲得（NS委任、既存の delegate 節を参照）、そして
+  **カスタム TLD のクライアント側設定**（`.hogehoge` は誰のデフォルト
+  resolver にも載っていないため、`systemd-resolved`/`dnsmasq` での
+  split-horizon 転送設定を具体例つきで追記——これが ADR-2607083100 の
+  「次段」に残していた「custom-tld ブリッジの実クライアント側resolver
+  設定手順のドキュメント化」の実施にあたる）。
+
+### Verification（追記分）
+
+`clojure -M -m nameserver.main examples/config.edn` を実際に起動し、
+実 `dig` で A / CNAME / カスタム TLD dnslink TXT を再確認、`kill` による
+`SIGTERM` で shutdown hook が正しく発火しソケットが閉じることを確認
+（ログに "shutting down..." → プロセス終了）。`clj-kondo` (`clojure -M:lint`)
+0 errors/0 warnings。
