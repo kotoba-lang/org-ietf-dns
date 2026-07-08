@@ -2,7 +2,10 @@
 
 - Status: Accepted — implemented, tested (27 tests / 54 assertions incl.
   genuine socket-level tests), `dig`-verified against a running instance.
-- superproject 記録: `90-docs/adr/2607083000-kotoba-lang-nameserver-domain-hosting.md`
+- superproject 記録: `90-docs/adr/2607083100-kotoba-lang-nameserver-domain-hosting.md`
+  （リポジトリは初期実装後に `nameserver` → `org-ietf-dns` へ改名。理由は
+  `90-docs/adr/` の rename ADR を参照 — RFC 1035 が IETF RFC であることに
+  基づく reverse-domain 命名、`org-ietf-turn`/`org-ietf-ical` 等と同型）
 
 ## 課題
 

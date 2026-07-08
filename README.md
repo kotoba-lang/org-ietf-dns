@@ -1,6 +1,10 @@
 # nameserver
 
-[![CI](https://github.com/kotoba-lang/nameserver/actions/workflows/ci.yml/badge.svg)](https://github.com/kotoba-lang/nameserver/actions/workflows/ci.yml)
+[![CI](https://github.com/kotoba-lang/org-ietf-dns/actions/workflows/ci.yml/badge.svg)](https://github.com/kotoba-lang/org-ietf-dns/actions/workflows/ci.yml)
+
+Renamed from `nameserver` (reverse-domain naming for the external spec it
+implements — RFC 1035 is an IETF RFC — same `org-<body>-<spec>` convention as
+this org's other IETF-RFC repos: `org-ietf-turn`, `org-ietf-ical`, etc.).
 
 An **authoritative DNS nameserver** — a real RFC 1035 wire-protocol UDP/TCP
 server you can `dig` against — plus an **alt-root custom-TLD bridge** that
