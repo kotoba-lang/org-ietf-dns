@@ -1,0 +1,20 @@
+{:paths ["src"]
+ ;; Zero third-party runtime deps for the wire/store/resolver layers (portable
+ ;; .cljc). `nameserver.server` is the one JVM-only namespace (raw UDP/TCP
+ ;; sockets have no portable equivalent on this stack's other runtimes — see
+ ;; README "Why JVM for the socket layer").
+ :deps {io.github.kotoba-lang/zone {:git/sha "34d178d4ac6eef49d309e33f07e17f863c5408bd"}
+        io.github.kotoba-lang/ipns {:git/sha "f2563eb1cb010c96f6dec1dfbd468fac93367498"}}
+ :aliases
+ {:test {:extra-paths ["test"]
+         :extra-deps {io.github.cognitect-labs/test-runner
+                      {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+         :main-opts ["-m" "cognitect.test-runner"]
+         :exec-fn cognitect.test-runner.api/test}
+  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
+         :main-opts    ["-m" "clj-kondo.main" "--lint" "src" "test" "--fail-level" "error"]}
+  ;; local checkouts for workspace development (orgs/kotoba-lang/*)
+  :dev {:override-deps {io.github.kotoba-lang/zone {:local/root "../zone"}
+                        io.github.kotoba-lang/ipns {:local/root "../ipns"}}}
+  ;; runnable example: boot a real UDP/TCP nameserver on the JVM
+  :examples {:extra-paths ["examples"]}}}

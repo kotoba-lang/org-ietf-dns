@@ -1,0 +1,138 @@
+# nameserver
+
+[![CI](https://github.com/kotoba-lang/nameserver/actions/workflows/ci.yml/badge.svg)](https://github.com/kotoba-lang/nameserver/actions/workflows/ci.yml)
+
+An **authoritative DNS nameserver** — a real RFC 1035 wire-protocol UDP/TCP
+server you can `dig` against — plus an **alt-root custom-TLD bridge** that
+resolves made-up TLDs (e.g. `.hogehoge`) to kotoba-lang's key-derived IPNS
+self-sovereign names ([`ipns`](https://github.com/kotoba-lang/ipns)) via the
+[dnslink](https://dnslink.io) convention.
+
+This closes a gap the existing DNS-adjacent libraries in this org leave
+open: [`zone`](https://github.com/kotoba-lang/zone) models zone files as
+EDN and [`godaddy-dns`](https://github.com/kotoba-lang/godaddy-dns) talks to
+a *registrar's* API — neither one actually **answers DNS queries on the
+wire**. `nameserver` is the missing data-plane piece: it consumes
+`zone.model` zones directly and serves them over real sockets.
+
+## What this is (and isn't)
+
+**Real TLD hosting (.com, .net, …)**: yes, for the part that's actually
+yours to run — get a domain (or subdomain) NS-delegated to this
+nameserver's public IP via your registrar (see `nameserver.delegate` +
+`godaddy-dns`'s `IDns`, below), and this server becomes authoritative for it
+from the internet's point of view. Nobody can make you the root authority
+for `.com` itself (ICANN owns that), but you don't need to be — NS
+delegation is exactly how every real authoritative nameserver, including
+the big managed-DNS providers, actually works.
+
+**Custom TLD hosting (.hogehoge, …)**: this is deliberately framed as an
+**alt-root**, not a claim of global resolvability — nobody can grant that
+for a made-up TLD (see Handshake / ENS-via-gateway / OpenNIC for the same
+reality). What you get: point a stub resolver, browser extension, or this
+nameserver's own clients at this server, and any syntactically valid
+kotoba-lang IPNS key-derived name resolves under your chosen custom suffix
+— no registrar, no owner hand-off, because holding the Ed25519 private key
+already *is* authority over that name (see `ipns.core`'s docstring).
+
+## Modules
+
+| ns | portability | role |
+|---|---|---|
+| `nameserver.names` | `.cljc` | domain-name label helpers (split/join/parent/wildcard) |
+| `nameserver.wire` | `.cljc` | RFC 1035 §4 message codec: EDN ⇄ wire bytes, with name compression on encode and decompression (loop-guarded against malicious pointers) on decode |
+| `nameserver.store` | `.cljc` | in-memory authoritative zone store over `zone.model` zones: exact match, wildcard, CNAME chase, NXDOMAIN/NODATA |
+| `nameserver.resolver` | `.cljc` | `IResolver` protocol + `chain-resolver` (first non-`:refused` wins) |
+| `nameserver.custom-tld` | `.cljc` | the `.hogehoge`-style alt-root ⇄ IPNS/dnslink bridge |
+| `nameserver.delegate` | `.cljc` | pure data: NS + glue-A record edit-set for delegating a subdomain via `godaddy-dns`'s `IDns` |
+| `nameserver.server` | **`.clj` only** | the UDP/TCP socket listener |
+
+## Why `.clj` (not `.cljc`) for the socket layer
+
+Per this monorepo's kotoba-wasm → clojurewasm → ClojureScript → nbb → JVM
+runtime priority, JVM is the deliberate last resort here, not a default:
+raw UDP/TCP socket binding has no portable equivalent on this stack's other
+runtimes — kotoba wasm's `actor:host` ABI has no raw-socket capability in
+its closed host-import table, and browsers can't bind UDP:53 either. Every
+other namespace (wire codec, zone store, resolver chain, custom-TLD bridge)
+is zero-third-party-dep `.cljc` and runs anywhere; only the listener itself
+is JVM.
+
+## Quick start
+
+```clojure
+(require '[zone.zone :as zone]
+         '[nameserver.resolver :as resolver]
+         '[nameserver.custom-tld :as ctld]
+         '[nameserver.server :as server])
+
+(def zone-resolver
+  (resolver/zone-store-resolver
+    {"example.test." (zone/parse-str (slurp "example.test.zone"))}))
+
+(def alt-root (ctld/custom-tld-resolver #{"hogehoge."} "ipns.dweb.link"))
+
+(def srv (server/start-server!
+           {:resolver (resolver/chain-resolver [zone-resolver alt-root])
+            :port 1053 :host "127.0.0.1"}))   ; use 53 + root for real deployment
+
+;; dig @127.0.0.1 -p 1053 example.test A
+;; dig @127.0.0.1 -p 1053 TXT <ipns-name>.hogehoge
+
+(server/stop-server! srv)
+```
+
+Runnable example: `clojure -M:dev:examples -m run-server` (see
+`examples/run_server.clj`).
+
+## Delegating a real subdomain
+
+```clojure
+(require '[nameserver.delegate :as delegate]
+         '[godaddydns.godaddy :as godaddy]
+         '[godaddydns.dns :as dns])
+
+(def records
+  (delegate/delegation-records
+    {:domain "example.com" :subdomain "ns"
+     :ns-hosts ["ns1" "ns2"]
+     :glue {"ns1" "203.0.113.10" "ns2" "203.0.113.11"}}))
+
+;; push via godaddy-dns-clj's IDns (dry-run by default per its own ADR-0001)
+(doseq [r (:glue-records records)]
+  (dns/-upsert-records! godaddy-conn "example.com" (:type r) (:name r) [r]))
+```
+
+Changing an entire registered domain's *apex* nameservers (the registrar
+account's "use these nameservers for the whole domain" setting) is a
+different registrar-account operation that `godaddy-dns`'s `IDns` doesn't
+implement — out of scope here too; `nameserver.delegate` covers subdomain
+delegation through the generic records API.
+
+## Scope (documented, not silently missing)
+
+- ASCII labels only (IDN's punycode ASCII-safe encoding covers real-world
+  non-ASCII names, so this isn't a practical restriction in practice).
+- TXT/CAA values ≤ 255 octets (single wire character-string; no multi-string
+  TXT splitting).
+- No EDNS0 (RFC 6891): an OPT pseudo-RR in a query's additional section
+  round-trips as opaque data and is ignored; responses never exceed the
+  classic 512-byte UDP body (larger answers set the TC bit and expect a TCP
+  retry, per RFC 1035 §4.2.1 — implemented).
+- No zone transfer (AXFR/IXFR), no DNSSEC, no delegation-boundary NS
+  referrals (if you host both a parent and child zone, records simply live
+  in whichever zone map has them).
+- No rate limiting/connection throttling beyond the wire-layer
+  compression-pointer-loop guard — a public-facing deployment should sit
+  behind its own DoS protection.
+
+## Test
+
+```
+clojure -M:dev:test
+```
+
+27 tests / 54 assertions, including genuine socket-level tests (a real
+`DatagramSocket` on `127.0.0.1` talking wire bytes to a server booted by
+`nameserver.server`) and a `dig`-verified manual smoke test via
+`examples/run_server.clj`.
