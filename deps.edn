@@ -15,6 +15,6 @@
          :main-opts    ["-m" "clj-kondo.main" "--lint" "src" "test" "--fail-level" "error"]}
   ;; local checkouts for workspace development (orgs/kotoba-lang/*)
   :dev {:override-deps {io.github.kotoba-lang/zone {:local/root "../zone"}
-                        io.github.kotoba-lang/ipns {:local/root "../ipns"}}}
+                        io.github.kotoba-lang/ipns {:local/root "../tech-ipfs-specs-ipns"}}}
   ;; runnable example: boot a real UDP/TCP nameserver on the JVM
   :examples {:extra-paths ["examples"]}}}
