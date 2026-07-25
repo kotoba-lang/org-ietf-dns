@@ -49,6 +49,7 @@ already *is* authority over that name (see `ipns.core`'s docstring).
 | `nameserver.resolver` | `.cljc` | `IResolver` protocol + `chain-resolver` (first non-`:refused` wins) |
 | `nameserver.custom-tld` | `.cljc` | the `.hogehoge`-style alt-root ⇄ IPNS/dnslink bridge |
 | `nameserver.delegate` | `.cljc` | pure data: NS + glue-A record edit-set for delegating a subdomain via `godaddy-dns`'s `IDns` |
+| `nameserver.domain-verification` | `.cljc` | portable DNS TXT ownership challenge and DNS-over-HTTPS JSON verdict |
 | `nameserver.server` | **`.clj` only** | the UDP/TCP socket listener |
 
 ## Why `.clj` (not `.cljc`) for the socket layer
