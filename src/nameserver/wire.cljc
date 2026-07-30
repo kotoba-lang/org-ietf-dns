@@ -18,11 +18,20 @@
   Scope (documented, not silently missing): ASCII labels only (IDN's punycode
   ASCII-safe encoding covers real-world non-ASCII names, so this is not a
   practical restriction); TXT/CAA values ≤ 255 octets (single wire
-  character-string, no multi-string TXT splitting); no EDNS0 (RFC 6891) — an
-  OPT pseudo-RR in a decoded message's additional section round-trips as
-  opaque `:zone/raw` bytes with a `CLASSn`/`TYPE41` label rather than being
-  interpreted, and responses never exceed the classic 512-byte UDP body; no
-  DNSSEC RR types."
+  character-string, no multi-string TXT splitting); no DNSSEC RR types.
+
+  EDNS0 (RFC 6891) is *not* interpreted here: an OPT pseudo-RR round-trips as
+  opaque `:zone/raw` rdata with a `CLASSn`/`TYPE41` label, and
+  `nameserver.edns` reads those fields as what they actually mean. That split
+  is deliberate — OPT overloads CLASS and TTL to mean payload size and flags,
+  and teaching this codec about it would put protocol semantics in a byte
+  layer.
+
+  Unknown RR types are carried both ways per RFC 3597 §5: `read-rdata` yields
+  `:zone/raw` and `write-rdata` puts it back. Before that the round trip was
+  broken in exactly one direction — a message could be decoded and then not
+  re-encoded, which is precisely what a forwarder, a zone transfer, or an OPT
+  pseudo-RR has to do with every type it does not itself understand."
   (:require [clojure.string :as str]
             [nameserver.names :as names]))
 
@@ -133,12 +142,30 @@
 (def ^:private type->int-map
   {"A" 1 "NS" 2 "CNAME" 5 "SOA" 6 "PTR" 12 "MX" 15 "TXT" 16 "AAAA" 28 "SRV" 33 "CAA" 257 "ANY" 255})
 (def ^:private int->type-map (into {} (map (fn [[k v]] [v k]) type->int-map)))
-(defn- rr-type->int [t] (or (get type->int-map t) (throw (ex-info "unknown RR type" {:type t}))))
+(defn- generic-n
+  "RFC 3597 §5 generic spelling: \"TYPE41\" / \"CLASS4096\" → the number.
+  Also accepts a bare integer, which is what a caller building an OPT
+  pseudo-RR naturally has."
+  [prefix v]
+  (cond
+    (integer? v) v
+    (and (string? v) (str/starts-with? v prefix))
+    (let [d (subs v (count prefix))]
+      (when (re-matches #"\d+" d)
+        #?(:clj (Integer/parseInt d) :cljs (js/parseInt d 10))))))
+
+(defn- rr-type->int [t]
+  (or (get type->int-map t)
+      (generic-n "TYPE" t)
+      (throw (ex-info "unknown RR type" {:type t}))))
 (defn- int->rr-type [n] (or (get int->type-map n) (str "TYPE" n)))
 
 (def ^:private class->int-map {"IN" 1 "CH" 3 "HS" 4 "ANY" 255})
 (def ^:private int->class-map (into {} (map (fn [[k v]] [v k]) class->int-map)))
-(defn- rr-class->int [c] (or (get class->int-map c) (throw (ex-info "unknown RR class" {:class c}))))
+(defn- rr-class->int [c]
+  (or (get class->int-map c)
+      (generic-n "CLASS" c)
+      (throw (ex-info "unknown RR class" {:class c}))))
 (defn- int->rr-class [n] (or (get int->class-map n) (str "CLASS" n)))
 
 (def ^:private rcode->int-map
@@ -212,7 +239,15 @@
                   val-bytes (str->ascii-bytes (str (:zone/value rdata)))]
               (b-append builder (into [(:zone/flags rdata) (count tag-bytes)]
                                        (into tag-bytes val-bytes))))
-    (throw (ex-info "unsupported RR type for wire encoding" {:type type}))))
+    ;; RFC 3597 §5: an RR this library does not model is carried as opaque
+    ;; rdata. `read-rdata`'s fallback already produces `:zone/raw`, so without
+    ;; this the round trip was broken in exactly one direction — a message
+    ;; could be decoded and then not re-encoded, which is precisely what a
+    ;; forwarder, a zone transfer, or an EDNS0 OPT pseudo-RR has to do with
+    ;; every type it does not itself understand.
+    (if-let [raw (:zone/raw rdata)]
+      (b-append builder (vec raw))
+      (throw (ex-info "unsupported RR type for wire encoding" {:type type})))))
 
 (defn- encode-question [builder {:dns/keys [qname qtype qclass]}]
   (-> builder (b-name qname) (b-u16 (rr-type->int qtype)) (b-u16 (rr-class->int (or qclass "IN")))))

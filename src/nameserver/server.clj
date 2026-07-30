@@ -15,7 +15,10 @@
 
   Scope: no rate limiting or connection throttling beyond the wire-layer
   compression-pointer-loop guard — a public-facing deployment should sit
-  behind its own DoS protection. No EDNS0, no zone transfer (AXFR/IXFR), no
+  behind its own DoS protection. This socket layer does not itself wire up
+  EDNS0 or zone transfer — `nameserver.edns` and `nameserver.transfer` are
+  pure and a server embedding them chooses its own payload limit and transfer
+  ACL. No
   DNSSEC — see nameserver.wire's docstring for the wire-format-level scope."
   (:require [nameserver.wire :as wire]
             [nameserver.resolver :as resolver])

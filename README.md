@@ -50,6 +50,8 @@ already *is* authority over that name (see `ipns.core`'s docstring).
 | `nameserver.custom-tld` | `.cljc` | the `.hogehoge`-style alt-root ⇄ IPNS/dnslink bridge |
 | `nameserver.delegate` | `.cljc` | pure data: NS + glue-A record edit-set for delegating a subdomain via `godaddy-dns`'s `IDns` |
 | `nameserver.domain-verification` | `.cljc` | portable DNS TXT ownership challenge and DNS-over-HTTPS JSON verdict |
+| `nameserver.edns` | `.cljc` | EDNS(0) (RFC 6891): OPT pseudo-RR, payload negotiation, DO bit, extended RCODE, measured truncation |
+| `nameserver.transfer` | `.cljc` | AXFR (RFC 5936) / IXFR (RFC 1995) with RFC 1982 serial arithmetic and a **required** ACL |
 | `nameserver.server` | **`.clj` only** | the UDP/TCP socket listener |
 
 ## Why `.clj` (not `.cljc`) for the socket layer
@@ -183,13 +185,21 @@ invasive:
   non-ASCII names, so this isn't a practical restriction in practice).
 - TXT/CAA values ≤ 255 octets (single wire character-string; no multi-string
   TXT splitting).
-- No EDNS0 (RFC 6891): an OPT pseudo-RR in a query's additional section
-  round-trips as opaque data and is ignored; responses never exceed the
-  classic 512-byte UDP body (larger answers set the TC bit and expect a TCP
-  retry, per RFC 1035 §4.2.1 — implemented).
-- No zone transfer (AXFR/IXFR), no DNSSEC, no delegation-boundary NS
-  referrals (if you host both a parent and child zone, records simply live
-  in whichever zone map has them).
+- EDNS0 (RFC 6891) is implemented in `nameserver.edns`, as an interpretation
+  layer over `wire` rather than inside it: OPT overloads CLASS to mean the
+  sender's payload size and TTL to mean version/DO/extended-RCODE, and teaching
+  the byte codec about that would put protocol semantics in a byte layer. Not
+  wired into `nameserver.server` by default — a server embedding it picks its
+  own payload ceiling. Without EDNS0 the body stays capped at 512 octets with
+  the TC bit and a TCP retry (RFC 1035 §4.2.1 — implemented).
+- Zone transfer (AXFR/IXFR) is implemented in `nameserver.transfer` and is
+  **pure**: it produces the record sequence, and the caller owns the socket.
+  The access predicate is a required argument with no default, because every
+  default is wrong — permissive leaks the whole zone, restrictive silently
+  breaks replication an operator thought they had configured.
+- No DNSSEC (see [`org-ietf-dnssec`](https://github.com/kotoba-lang/org-ietf-dnssec)),
+  no delegation-boundary NS referrals (if you host both a parent and child
+  zone, records simply live in whichever zone map has them).
 - No rate limiting/connection throttling beyond the wire-layer
   compression-pointer-loop guard — a public-facing deployment should sit
   behind its own DoS protection.
@@ -200,7 +210,7 @@ invasive:
 clojure -M:dev:test
 ```
 
-27 tests / 54 assertions, including genuine socket-level tests (a real
+51 tests / 150 assertions, including genuine socket-level tests (a real
 `DatagramSocket` on `127.0.0.1` talking wire bytes to a server booted by
 `nameserver.server`) and a `dig`-verified manual smoke test via
 `examples/run_server.clj`.
