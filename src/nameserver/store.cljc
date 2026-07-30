@@ -2,7 +2,8 @@
   "In-memory authoritative zone store: given `zones` ({origin-FQDN ->
   zone.model zone}) and a query, find the closest enclosing zone
   (longest-suffix match on :zone/origin) and answer straight from its
-  :zone/records — no AXFR/IXFR, no DNSSEC, no delegation-boundary referrals
+  :zone/records — no DNSSEC, no delegation-boundary referrals (zone transfer
+  lives in `nameserver.transfer`, which reads a zone rather than this store)
   (if you host both a parent and a child zone, records simply live in
   whichever zone map has them; there is no separate NS-referral step). This
   is the single-master authoritative data plane; see README for how a real
