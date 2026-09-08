@@ -15,7 +15,7 @@
   dnslink; it does not itself speak libp2p/IPNS routing (out of scope, same
   as ipns.core's own documented non-scope: 'Not in scope: publishing/
   resolving IPNS records over the network')."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [ipns.core :as ipns]
             [nameserver.names :as names]
             [nameserver.resolver :as resolver]))

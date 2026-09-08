@@ -1,7 +1,7 @@
 (ns nameserver.domain-verification
   "Portable DNS TXT ownership-challenge contract for SaaS tenant domains.
   Network lookup and token hashing remain host capabilities."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (def challenge-label "_itonami-verification")
 (def value-prefix "itonami-domain-verification=")

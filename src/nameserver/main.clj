@@ -21,7 +21,7 @@
                   :gateway-host \"ipns.dweb.link\"}} ; optional"
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [zone.zone :as zone]
             [nameserver.resolver :as resolver]
             [nameserver.custom-tld :as ctld]

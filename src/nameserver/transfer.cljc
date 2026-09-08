@@ -34,7 +34,7 @@
   has been updated more than 2^31 times, or one whose serial was reset, breaks
   a naive `<` comparison — and the symptom is a secondary that silently stops
   updating."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 ;; ── RFC 1982 serial arithmetic ────────────────────────────────────────────
 
@@ -117,7 +117,7 @@
   ;; DNS names are case-insensitive (RFC 4343), so the comparison key
   ;; lower-cases the owner. Without it a zone edit that only changed the case
   ;; of a name would show up as one delete and one add of the same record.
-  (let [key-of (juxt #(some-> (:zone/name %) str/lower-case) :zone/type :zone/class
+  (let [key-of (juxt #(some-> (:zone/name %) str/lower) :zone/type :zone/class
                      :zone/ttl :zone/rdata)
         old-set (into #{} (map key-of) (:zone/records old-zone))
         new-set (into #{} (map key-of) (:zone/records new-zone))]

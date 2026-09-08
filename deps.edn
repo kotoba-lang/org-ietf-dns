@@ -3,7 +3,12 @@
  ;; .cljc). `nameserver.server` is the one JVM-only namespace (raw UDP/TCP
  ;; sockets have no portable equivalent on this stack's other runtimes — see
  ;; README "Why JVM for the socket layer").
- :deps {io.github.kotoba-lang/zone {:git/sha "34d178d4ac6eef49d309e33f07e17f863c5408bd"}
+ :deps {
+        ;; kotoba.lang.text, not clojure.string. Pinned as an explicit floor:
+        ;; tools.deps takes the NEWEST sha it is shown, so without a floor here
+        ;; this repo silently rides whatever a sibling happens to name.
+        io.github.kotoba-lang/text {:git/sha "73bdb13ae7a3d004b44bca08be03a3191157a38f"}
+       io.github.kotoba-lang/zone {:git/sha "34d178d4ac6eef49d309e33f07e17f863c5408bd"}
         io.github.kotoba-lang/ipns {:git/sha "f2563eb1cb010c96f6dec1dfbd468fac93367498"}}
  :aliases
  {:test {:extra-paths ["test"]
