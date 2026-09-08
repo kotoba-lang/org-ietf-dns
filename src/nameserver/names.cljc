@@ -2,7 +2,7 @@
   "Domain-name label helpers shared by nameserver.wire and nameserver.store.
   Names are FQDN strings with a trailing dot (\"www.example.com.\"); the root
   is \".\". Zero third-party deps, portable .cljc."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (defn split-labels
   "\"www.example.com.\" -> [\"www\" \"example\" \"com\"]; \".\" or \"\" -> []."

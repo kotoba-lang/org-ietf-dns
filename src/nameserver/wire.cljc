@@ -32,7 +32,7 @@
   broken in exactly one direction — a message could be decoded and then not
   re-encoded, which is precisely what a forwarder, a zone transfer, or an OPT
   pseudo-RR has to do with every type it does not itself understand."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [nameserver.names :as names]))
 
 ;; ── portable byte/char primitives ────────────────────────────────────────
@@ -50,7 +50,7 @@
 
 (defn- hex->int [s]
   (reduce (fn [n c]
-            (let [d (str/index-of hex-alphabet (str/lower-case (str c)))]
+            (let [d (str/index-of hex-alphabet (str/lower (str c)))]
               (when-not d (throw (ex-info "bad hex digit" {:char c})))
               (+ (* n 16) d)))
           0 (seq s)))

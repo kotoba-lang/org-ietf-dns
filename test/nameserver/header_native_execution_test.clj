@@ -22,7 +22,7 @@
 
 (ns nameserver.header-native-execution-test
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.test :refer [deftest is]]
             [kotoba.compiler.atomic-output :as atomic-output]
             [kotoba.compiler.core :as compiler]

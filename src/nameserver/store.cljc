@@ -8,7 +8,7 @@
   whichever zone map has them; there is no separate NS-referral step). This
   is the single-master authoritative data plane; see README for how a real
   TLD (e.g. .com) gets NS-delegated here via godaddy-dns-clj."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [nameserver.names :as names]))
 
 (defn- absolute-name
