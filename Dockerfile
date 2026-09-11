@@ -7,4 +7,4 @@ COPY src /app/src
 COPY examples/zones /app/zones
 COPY deploy/docker-config.edn /app/config.edn
 EXPOSE 53/udp 53/tcp
-CMD ["clojure", "-M", "-m", "nameserver.main"]
+CMD ["kbb", "-M", "-m", "nameserver.main"]

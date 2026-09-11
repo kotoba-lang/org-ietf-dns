@@ -1,7 +1,7 @@
 ;; Runnable example: boot a real UDP/TCP nameserver on the JVM, serving a
 ;; small sample zone plus the .hogehoge alt-root custom-TLD bridge.
 ;;
-;;   clojure -M:dev:examples -m run-server
+;;   kbb -M:dev:examples -m run-server
 ;;
 ;; Then, in another terminal (dig ships with most OSes / bind-tools):
 ;;

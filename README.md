@@ -89,7 +89,7 @@ is JVM.
 (server/stop-server! srv)
 ```
 
-Runnable example: `clojure -M:dev:examples -m run-server` (see
+Runnable example: `kbb -M:dev:examples -m run-server` (see
 `examples/run_server.cljk`).
 
 ## Delegating a real subdomain
@@ -122,7 +122,7 @@ The quick-start/`run_server.clj` path above is for trying it out. To run a
 persistent process:
 
 ```
-clojure -M -m nameserver.main [config.edn]   # defaults to $NAMESERVER_CONFIG, then ./config.edn
+kbb -M -m nameserver.main [config.edn]   # defaults to $NAMESERVER_CONFIG, then ./config.edn
 ```
 
 `config.edn` (see `examples/config.edn`):
@@ -207,7 +207,7 @@ invasive:
 ## Test
 
 ```
-clojure -M:dev:test
+kbb -M:dev:test
 ```
 
 51 tests / 150 assertions, including genuine socket-level tests (a real

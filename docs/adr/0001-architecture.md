@@ -106,7 +106,7 @@ TC ビットを立てて TCP フォールバック（RFC 1035 §4.2.1）。
 
 ## Verification
 
-`clojure -M:dev:test`: **27 tests / 54 assertions / 0 failures**
+`kbb -M:dev:test`: **27 tests / 54 assertions / 0 failures**
 (wire round-trip全型・名前圧縮・悪意ポインタ循環・truncation、store の
 exact/wildcard/CNAME/NODATA/NXDOMAIN/ANY、resolver chain、custom-tld の
 dnslink/CNAME/NXDOMAIN/REFUSED、delegate の純関数、server の実ソケット UDP
@@ -118,7 +118,7 @@ A/CNAME/NXDOMAIN/ANY/TCP フォールバック/カスタム TLD TXT・CNAME を�
 「実際にネームサーバーとして動かすには」という問いを受け、REPL/`run_server.clj`
 の demo と実運用の間を埋める CLI エントリポイントを追加した:
 
-- **`nameserver.main`** — `clojure -M -m nameserver.main [config.edn]`。
+- **`nameserver.main`** — `kbb -M -m nameserver.main [config.edn]`。
   config は `:host`/`:port`/`:zones-dir`(ディレクトリ内の全 `*.zone` を
   `zone.zone/parse-str` でロード、キーは各ファイルの `$ORIGIN`)/`:custom-tld`
   (任意)。`chain-resolver` で hosted zones → custom-tld alt-root の順に組み、
@@ -150,8 +150,8 @@ A/CNAME/NXDOMAIN/ANY/TCP フォールバック/カスタム TLD TXT・CNAME を�
 
 ### Verification（追記分）
 
-`clojure -M -m nameserver.main examples/config.edn` を実際に起動し、
+`kbb -M -m nameserver.main examples/config.edn` を実際に起動し、
 実 `dig` で A / CNAME / カスタム TLD dnslink TXT を再確認、`kill` による
 `SIGTERM` で shutdown hook が正しく発火しソケットが閉じることを確認
-（ログに "shutting down..." → プロセス終了）。`clj-kondo` (`clojure -M:lint`)
+（ログに "shutting down..." → プロセス終了）。`clj-kondo` (`kbb -M:lint`)
 0 errors/0 warnings。
