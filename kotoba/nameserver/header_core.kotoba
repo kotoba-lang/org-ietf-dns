@@ -16,7 +16,7 @@
 ;; required. It is the same check `dhcp.client` makes on the transaction id,
 ;; for the same reason and against the same attacker.
 ;;
-;; Checked against `nameserver.wire` in test/nameserver/header_kotoba_parity_test.clj.
+;; Checked against `nameserver.wire` in test/nameserver/header_kotoba_parity_test.cljk.
 
 (ns nameserver.header-core
   (:export [flags-b1 flags-b2 qr-response? opcode-of authoritative? truncated?
