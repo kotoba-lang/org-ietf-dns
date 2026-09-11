@@ -90,7 +90,7 @@ is JVM.
 ```
 
 Runnable example: `clojure -M:dev:examples -m run-server` (see
-`examples/run_server.clj`).
+`examples/run_server.cljk`).
 
 ## Delegating a real subdomain
 
@@ -213,4 +213,4 @@ clojure -M:dev:test
 51 tests / 150 assertions, including genuine socket-level tests (a real
 `DatagramSocket` on `127.0.0.1` talking wire bytes to a server booted by
 `nameserver.server`) and a `dig`-verified manual smoke test via
-`examples/run_server.clj`.
+`examples/run_server.cljk`.

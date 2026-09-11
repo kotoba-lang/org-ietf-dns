@@ -110,7 +110,7 @@ TC ビットを立てて TCP フォールバック（RFC 1035 §4.2.1）。
 (wire round-trip全型・名前圧縮・悪意ポインタ循環・truncation、store の
 exact/wildcard/CNAME/NODATA/NXDOMAIN/ANY、resolver chain、custom-tld の
 dnslink/CNAME/NXDOMAIN/REFUSED、delegate の純関数、server の実ソケット UDP
-統合テスト4本)。加えて `examples/run_server.clj` を起動し実 `dig` で
+統合テスト4本)。加えて `examples/run_server.cljk` を起動し実 `dig` で
 A/CNAME/NXDOMAIN/ANY/TCP フォールバック/カスタム TLD TXT・CNAME を目視確認。
 
 ## 7. 実運用エントリポイント (`nameserver.main`) + systemd/Docker（2026-07-08 追記）
