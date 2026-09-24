@@ -11,7 +11,7 @@
 ;; is right, and each one is separately broken in the discrimination pass.
 
 (ns nameserver.header-kotoba-parity-test
-  (:require [clojure.java.io :as io]
+  (:require [kotoba.io :as io]
             [kotoba.test :refer [deftest is]]
             [kotoba.compiler.core :as compiler]
             [kotoba.kir :as ir]
@@ -21,7 +21,7 @@
   (io/file (System/getProperty "user.dir") "kotoba" "nameserver" "header_core.kotoba"))
 
 (defn- source-available? []
-  (let [present? (.exists source-file)]
+  (let [present? (io/exists? source-file)]
     (is present? (str "kotoba object not found at " source-file))
     present?))
 

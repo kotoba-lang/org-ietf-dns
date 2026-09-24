@@ -19,7 +19,7 @@
                                            ; the zone key, filename is irrelevant
      :custom-tld {:suffixes [\"hogehoge.\"]         ; optional alt-root bridge
                   :gateway-host \"ipns.dweb.link\"}} ; optional"
-  (:require [clojure.java.io :as io]
+  (:require [kotoba.io :as io]
             [kotoba.lang.edn :as edn]
             [kotoba.lang.text :as str]
             [zone.zone :as zone]
@@ -28,9 +28,9 @@
             [nameserver.server :as server]))
 
 (defn- zone-files [dir]
-  (->> (file-seq (io/file dir))
-       (filter #(.isFile ^java.io.File %))
-       (filter #(str/ends-with? (.getName ^java.io.File %) ".zone"))))
+  (->> (io/file-seq (io/file dir))
+       (filter #(io/file? %))
+       (filter #(str/ends-with? (io/file-name %) ".zone"))))
 
 (defn- load-zones
   "Every *.zone file in `dir`, parsed and keyed by its own :zone/origin

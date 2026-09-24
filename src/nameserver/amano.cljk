@@ -13,7 +13,7 @@
   (:require [kotoba.lang.text :as str]
             [nameserver.names :as names]
             [nameserver.resolver :as resolver]
-            #?(:clj [clojure.data.json :as json])))
+            #?(:clj [kotoba.json :as json])))
 
 (defn amano-name
   "Extract the target label from `<label>.amano.` or `_dnslink.<label>.amano.`."
