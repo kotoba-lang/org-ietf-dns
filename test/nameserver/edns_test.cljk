@@ -1,5 +1,5 @@
 (ns nameserver.edns-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [nameserver.edns :as edns]
             [nameserver.wire :as wire]))
 

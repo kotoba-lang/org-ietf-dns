@@ -1,5 +1,5 @@
 (ns nameserver.transfer-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [nameserver.transfer :as xfr]))
 
 (defn- soa [serial]

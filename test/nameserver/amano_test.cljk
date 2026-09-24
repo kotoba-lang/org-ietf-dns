@@ -1,5 +1,5 @@
 (ns nameserver.amano-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [nameserver.amano :as amano]
             [nameserver.resolver :as resolver]))
 

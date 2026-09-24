@@ -1,5 +1,5 @@
 (ns nameserver.store-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [zone.zone :as zone]
             [nameserver.store :as store]))
 
