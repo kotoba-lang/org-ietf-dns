@@ -1,5 +1,5 @@
 (ns nameserver.delegate-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [nameserver.delegate :as delegate]))
 
 (deftest ns-and-glue-records

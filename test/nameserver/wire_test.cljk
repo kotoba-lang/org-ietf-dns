@@ -1,5 +1,5 @@
 (ns nameserver.wire-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [nameserver.wire :as wire]))
 
 (def soa-record

@@ -1,5 +1,5 @@
 (ns nameserver.resolver-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [kotoba.test :refer [deftest testing is]]
             [zone.zone :as zone]
             [nameserver.resolver :as resolver]
             [nameserver.custom-tld :as ctld]))

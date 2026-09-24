@@ -1,5 +1,5 @@
 (ns nameserver.domain-verification-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [nameserver.domain-verification :as verification]))
 
 (deftest challenge-contract

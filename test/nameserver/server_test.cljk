@@ -3,7 +3,7 @@
   RFC 1035 wire bytes to a server booted by nameserver.server — this is the
   actual claim under test (\"behaves like a real nameserver\"), not just
   in-process function calls."
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [zone.zone :as zone]
             [nameserver.wire :as wire]
             [nameserver.resolver :as resolver]
