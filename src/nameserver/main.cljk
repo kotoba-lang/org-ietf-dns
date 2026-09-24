@@ -20,7 +20,7 @@
      :custom-tld {:suffixes [\"hogehoge.\"]         ; optional alt-root bridge
                   :gateway-host \"ipns.dweb.link\"}} ; optional"
   (:require [clojure.java.io :as io]
-            [clojure.edn :as edn]
+            [kotoba.lang.edn :as edn]
             [kotoba.lang.text :as str]
             [zone.zone :as zone]
             [nameserver.resolver :as resolver]
