@@ -57,7 +57,7 @@
       (is (true? (:edns/do? (edns/parse (edns/respond resp (query-with-opt {:do? true})))))))))
 
 (deftest more-than-one-opt-is-a-format-error-not-a-first-wins
-  (is (thrown? #?(:clj clojure.lang.ExceptionInfo :cljs js/Error)
+  (is (thrown? js/Error
                (edns/opt-rr {:dns/additional [(edns/opt-record {}) (edns/opt-record {})]}))))
 
 (deftest the-extended-rcode-splits-across-two-places
