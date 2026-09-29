@@ -3,7 +3,7 @@
   this library. Raw socket binding has no portable equivalent across this
   stack's other runtimes (kotoba wasm's actor:host ABI has no raw-socket
   capability in its closed host-import table per ADR-2607062330; browsers
-  can't bind UDP:53 either), so per CLAUDE.md's kotoba-wasm > clojurewasm >
+  can't bind UDP:53 either), so per AGENTS.md's kotoba-wasm > clojurewasm >
   cljs > nbb > JVM runtime priority, JVM is the deliberate last resort here,
   not a default.
 

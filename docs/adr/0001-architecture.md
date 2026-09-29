@@ -58,7 +58,7 @@ docstring と同じ設計思想）。IPNS のネットワーク解決自体(libp
 ### 5. ソケット層 (`nameserver.server`) だけ `.clj`（JVM 限定）
 
 本リポジトリの `.cljc`/`.kotoba` ランタイム優先順位（kotoba wasm >
-clojurewasm > ClojureScript > nbb > JVM、CLAUDE.md 2026-07-07 改訂）に従うと、
+clojurewasm > ClojureScript > nbb > JVM、AGENTS.md 2026-07-07 改訂）に従うと、
 生ソケット bind は他ランタイムに移植先が無い: kotoba wasm の `actor:host` ABI は
 閉じた host-import 表に raw socket capability を持たず（ADR-2607062330）、
 ブラウザも UDP:53 を bind できない。よって JVM は「最後の手段」として意図的に
